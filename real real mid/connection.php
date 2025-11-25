@@ -12,7 +12,7 @@ if (in_array($_SERVER['REMOTE_ADDR'], $whitelist)) {
     // --- CẤU HÌNH CHO INFINITYFREE ---
     // LƯU Ý: Mày phải vào web InfinityFree mục MySQL Databases để xem cái 'sqlXXX' chính xác là gì nhé (Ví dụ: sql305.infinityfree.com)
     // Tao để tạm sql300, mày phải sửa lại cho đúng cái của mày
-    $host = "sql305.infinityfree.com"; 
+    $host = "sql206.infinityfree.com"; 
     $user = "if0_40503839";
     $pass = "dungphuctai"; 
     $db_name = "if0_40503839_recipe_share_db";
