@@ -3,7 +3,6 @@
 $whitelist = array('127.0.0.1', '::1', 'localhost');
 
 if (in_array($_SERVER['REMOTE_ADDR'], $whitelist)) {
-    // --- CẤU HÌNH CHO MÁY TÍNH CỦA MÀY (XAMPP) ---
     $host = "localhost";
     $user = "root";
     $pass = "";
@@ -21,6 +20,6 @@ if (mysqli_connect_errno()) {
     die("Kết nối thất bại: " . mysqli_connect_error());
 }
 
-// Đảm bảo tiếng Việt không bị lỗi font
+
 mysqli_set_charset($con, 'utf8');
 ?>
