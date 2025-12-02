@@ -1,22 +1,33 @@
 <?php
 session_start();
-$con=mysqli_connect('localhost','root','');
-mysqli_select_db($con,"recipe_share_db");
+include "connection.php"; // Dùng chung file connection
 
-/* create variables to store data */
-$username =$_POST['username'];
-$password =$_POST['password'];
-$email =$_POST['email'];
-$phone =$_POST['phone'];
+$username = $_POST['username'];
+$password = $_POST['password'];
+$email = $_POST['email'];
+$phone = $_POST['phone'];
 
+// Kiểm tra user tồn tại
+$check = $con->prepare("SELECT * FROM users WHERE username = ?");
+$check->bind_param("s", $username);
+$check->execute();
+$check->store_result();
 
-$result = mysqli_query($con,"select * from users where username='$username'");
-
-$num =mysqli_num_rows($result);
-if($num==1){
+if ($check->num_rows > 0) {
     echo "Username Exists";
-}else{
-    mysqli_query($con,"insert into users(username,password,email,phone) 
-                            values ('$username','$password','$email','$phone')");
-     echo "Resgistration Successful";
+} else {
+    // MÃ HÓA MẬT KHẨU TRƯỚC KHI LƯU
+    $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+
+    // Chèn vào DB
+    $stmt = $con->prepare("INSERT INTO users(username, password, email, phone) VALUES (?, ?, ?, ?)");
+    $stmt->bind_param("ssss", $username, $hashed_password, $email, $phone);
+    
+    if ($stmt->execute()) {
+         // Đăng ký xong có thể chuyển hướng về login luôn cho tiện
+         echo "<script>alert('Đăng ký thành công!'); window.location='login.php';</script>";
+    } else {
+         echo "Error: " . $stmt->error;
+    }
 }
+?>
