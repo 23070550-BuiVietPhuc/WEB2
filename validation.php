@@ -1,26 +1,51 @@
-
 <?php
 session_start();
+include "connection.php"; // Kết nối CSDL
 
-/* connect to database check user*/
-$con=mysqli_connect('localhost','root',''); 
-mysqli_select_db($con,'recipe_share_db');
+// Lấy dữ liệu từ form
+$username = $_POST['username'];
+$password = $_POST['password'];
 
-/* create variables to store data */
-$username =$_POST['username'];
-$password =$_POST['password'];
+// 1. Dùng Prepared Statement để chống SQL Injection
+$stmt = $con->prepare("SELECT * FROM users WHERE username = ?");
+$stmt->bind_param("s", $username);
+$stmt->execute();
+$result = $stmt->get_result();
 
-$result = mysqli_query($con,"select * from users where username='$username'AND password='$password'");
-$num =mysqli_num_rows($result);
-
-if($num==1){
+// Kiểm tra xem có user này không
+if ($result->num_rows === 1) {
+    $user = $result->fetch_assoc();
     
-    $user_data = mysqli_fetch_array($result); 
-    $_SESSION['username'] =$user_data['username'];
-    $_SESSION['user_id'] =$user_data['user_id'];
-    
-    header('location:home.php');
-}else{
+    // 2. Kiểm tra mật khẩu (Dùng password_verify cho mật khẩu đã mã hóa)
+    // Lưu ý: Nếu database cũ của bạn đang lưu password thường, dòng này sẽ lỗi.
+    // Bạn cần reset lại DB hoặc đăng ký user mới sau khi sửa file registration.php
+    if (password_verify($password, $user['password'])) {
+        
+        // Đăng nhập thành công -> Lưu Session
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['user_id'] = $user['user_id'];
+
+        // 3. Xử lý "Remember Me" (Cookie)
+        if (isset($_POST['remember'])) {
+            // Lưu username vào cookie trong 30 ngày
+            setcookie('username', $username, time() + (86400 * 30), "/");
+            
+            // Lưu mật khẩu ĐÃ MÃ HÓA (từ DB) vào cookie để đối chiếu sau này (Không lưu password thường!)
+            setcookie('token', $user['password'], time() + (86400 * 30), "/"); 
+        }
+
+        header('location:home.php');
+        exit;
+    } else {
+        // Sai mật khẩu
+        $_SESSION['error'] = "Mật khẩu không đúng!";
+        header('location:login.php');
+        exit;
+    }
+} else {
+    // Sai username
+    $_SESSION['error'] = "Tài khoản không tồn tại!";
     header('location:login.php');
+    exit;
 }
 ?>
