@@ -57,7 +57,7 @@ $result = mysqli_query($con, "SELECT * FROM recipes WHERE user_id = '$user_id'")
             display: flex; 
             justify-content: space-between; 
             align-items: center; 
-            background-color: #ff5c5c; 
+            background-color: #f5b66fff; 
             padding: 15px 30px; 
             border-radius: 0 0 25px 25px; 
             color: white; 
