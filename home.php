@@ -32,7 +32,7 @@ $result = mysqli_query($con, "SELECT * FROM recipes WHERE user_id = '$user_id'")
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background-color: #ff5c5c;
+            background-color: #925204ff;
             padding: 15px 30px;
             border-radius: 0 0 25px 25px;
             color: white;
@@ -59,14 +59,14 @@ $result = mysqli_query($con, "SELECT * FROM recipes WHERE user_id = '$user_id'")
         .user-box a {
             text-decoration: none;
             color: white;
-            background-color: #e44e10;
+            background-color: #ee8254ff;
             padding: 6px 12px;
             border-radius: 10px;
             font-size: 14px;
         }
 
         .user-box a:hover {
-            background-color: #c63e0a;
+            background-color: #f06028ff;
         }
 
         .header {
