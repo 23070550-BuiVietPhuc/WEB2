@@ -1,26 +1,41 @@
-
 <?php
 session_start();
+include "connection.php";
 
-/* connect to database check user*/
-$con=mysqli_connect('localhost','root',''); 
-mysqli_select_db($con,'recipe_share_db');
+$username = $_POST['username'];
+$password = $_POST['password'];
 
-/* create variables to store data */
-$username =$_POST['username'];
-$password =$_POST['password'];
+// 1. Tìm user trong database
+$stmt = $con->prepare("SELECT * FROM users WHERE username = ?");
+$stmt->bind_param("s", $username);
+$stmt->execute();
+$result = $stmt->get_result();
 
-$result = mysqli_query($con,"select * from users where username='$username'AND password='$password'");
-$num =mysqli_num_rows($result);
-
-if($num==1){
+if ($result->num_rows === 1) {
+    $user = $result->fetch_assoc();
     
-    $user_data = mysqli_fetch_array($result); 
-    $_SESSION['username'] =$user_data['username'];
-    $_SESSION['user_id'] =$user_data['user_id'];
-    
-    header('location:home.php');
-}else{
+    // 2. Kiểm tra mật khẩu (So sánh pass nhập vào với pass đã mã hóa trong DB)
+    if (password_verify($password, $user['password'])) {
+        
+        // Đăng nhập thành công -> Lưu Session
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['user_id'] = $user['user_id'];
+
+        // 3. Xử lý "Remember Me" (Cookie)
+        if (isset($_POST['remember'])) {
+            // Lưu trong 30 ngày
+            setcookie('username', $username, time() + (86400 * 30), "/");
+            // Lưu chuỗi hash mật khẩu làm token xác thực
+            setcookie('token', $user['password'], time() + (86400 * 30), "/"); 
+        }
+
+        header('location:home.php');
+    } else {
+        $_SESSION['error'] = "Mật khẩu không đúng!";
+        header('location:login.php');
+    }
+} else {
+    $_SESSION['error'] = "Tài khoản không tồn tại!";
     header('location:login.php');
 }
 ?>
