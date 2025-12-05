@@ -43,7 +43,7 @@ $ing_res = mysqli_query($con, "SELECT * FROM ingredients WHERE recipe_id=$id");
             display: inline-block;
             margin-bottom: 25px;
             text-decoration: none;
-            background-color: #c869f0; /* Màu tím từ home.php */
+            background-color: #c869f0;
             color: white;
             padding: 10px 20px;
             border-radius: 15px;
@@ -62,14 +62,13 @@ $ing_res = mysqli_query($con, "SELECT * FROM ingredients WHERE recipe_id=$id");
         }
         
         h3 {
-            color: #ff5c5c; /* Màu header ở home */
+            color: #ff5c5c;
             border-bottom: 2px solid #ff9856;
             padding-bottom: 5px;
             margin-top: 30px;
             margin-bottom: 20px;
         }
         
-        /* Style cho các nhóm form (label + input) */
         .form-group {
             margin-bottom: 20px;
         }
@@ -88,12 +87,12 @@ $ing_res = mysqli_query($con, "SELECT * FROM ingredients WHERE recipe_id=$id");
             padding: 12px;
             border: 1px solid #ddd;
             border-radius: 8px;
-            box-sizing: border-box; /* Quan trọng để padding không làm vỡ layout */
+            box-sizing: border-box;
             font-size: 1em;
         }
 
         .form-group textarea {
-            resize: vertical; /* Cho phép kéo chiều cao */
+            resize: vertical;
             min-height: 120px;
         }
         
@@ -109,7 +108,6 @@ $ing_res = mysqli_query($con, "SELECT * FROM ingredients WHERE recipe_id=$id");
             padding: 5px;
         }
 
-        /* Style cho danh sách nguyên liệu */
         #ingredient-list {
             display: flex;
             flex-direction: column;
@@ -123,13 +121,12 @@ $ing_res = mysqli_query($con, "SELECT * FROM ingredients WHERE recipe_id=$id");
         }
 
         .ingredient-item input[type="text"] {
-            flex: 1; /* Tự động co giãn */
+            flex: 1;
             padding: 10px;
             border: 1px solid #ddd;
             border-radius: 8px;
         }
 
-        /* Style cho các nút */
         button {
             border: none;
             padding: 10px 18px;
@@ -141,31 +138,28 @@ $ing_res = mysqli_query($con, "SELECT * FROM ingredients WHERE recipe_id=$id");
             transition: background-color 0.2s ease;
         }
         
-        /* Nút Thêm nguyên liệu */
         .btn-add {
-            background-color: #ff9856; /* Màu cam */
+            background-color: #ff9856;
             margin-top: 15px;
         }
         .btn-add:hover {
             background-color: #e08040;
         }
 
-        /* Nút Xóa nguyên liệu */
         .btn-remove {
-            background-color: #ff5c5c; /* Màu đỏ */
-            padding: 8px 12px; /* Nhỏ hơn một chút */
+            background-color: #ff5c5c;
+            padding: 8px 12px;
             font-size: 0.9em;
         }
         .btn-remove:hover {
             background-color: #d94848;
         }
         
-        /* Nút Update chính */
         .btn-update {
-            background-color: #c869f0; /* Màu tím */
+            background-color: #c869f0;
             padding: 14px 28px;
             font-size: 1.1em;
-            display: block; /* Tự xuống hàng và căn giữa */
+            display: block;
             width: 100%;
             max-width: 300px;
             margin: 30px auto 0 auto;
@@ -174,7 +168,7 @@ $ing_res = mysqli_query($con, "SELECT * FROM ingredients WHERE recipe_id=$id");
             background-color: #a055c0;
         }
     </style>
-    </head>
+</head>
 <body>
 
 <div class="container">
@@ -213,8 +207,8 @@ $ing_res = mysqli_query($con, "SELECT * FROM ingredients WHERE recipe_id=$id");
         <div id="ingredient-list">
             <?php while($ing = mysqli_fetch_array($ing_res)): ?>
             <div class="ingredient-item">
-                <input type="text" name="ingredient_name[]" value="<?php echo $ing['ingredient_name']; ?>" placeholder="Tên nguyên liệu">
-                <input type="text" name="quantity[]" value="<?php echo $ing['quantity']; ?>" placeholder="Số lượng">
+                <input type="text" name="ingredient_name[]" value="<?php echo $ing['ingredient_name']; ?>" placeholder="Ingredient name">
+                <input type="text" name="quantity[]" value="<?php echo $ing['quantity']; ?>" placeholder="Quantity">
                 <button type="button" class="btn-remove" onclick="removeIngredient(this)">Remove</button>
             </div>
             <?php endwhile; ?>
@@ -226,6 +220,7 @@ $ing_res = mysqli_query($con, "SELECT * FROM ingredients WHERE recipe_id=$id");
     </form>
     
 </div> 
+
 <script>
 function addIngredient() {
     const container = document.getElementById('ingredient-list');
@@ -244,39 +239,57 @@ function removeIngredient(button) {
     button.parentElement.remove();
 }
 </script>
-</body>
 
 <?php
+// Handle form submission
 if (isset($_POST["update"])) {
-    $new_image = $recipe_image; 
+    // Keep old image by default
+    $final_path = $recipe_image; 
+
+    // Check if new image uploaded
     if (isset($_FILES['recipe_image']) && $_FILES['recipe_image']['error'] == 0) {
+        // Create unique filename to avoid duplicates
+        $filename = time() . "_" . basename($_FILES["recipe_image"]["name"]);
         $target_dir = "uploads/";
-        $new_image = $target_dir . basename($_FILES["recipe_image"]["name"]);
-        move_uploaded_file($_FILES["recipe_image"]["tmp_name"], $new_image);
+        
+        // Create uploads directory if it doesn't exist
+        if (!is_dir($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+        
+        $target_file = $target_dir . $filename;
+
+        // Move uploaded file
+        if (move_uploaded_file($_FILES["recipe_image"]["tmp_name"], $target_file)) {
+            $final_path = $target_file;
+        } else {
+            echo "<script>alert('Error: Cannot save image. Check uploads folder permissions!');</script>";
+        }
     }
     
-    mysqli_query($con, "UPDATE recipes 
-        SET recipe_name='$_POST[recipe_name]',
-            recipe_image='$new_image',
-            instructions='$_POST[instructions]',
-            cook_time='$_POST[cook_time]'
-        WHERE recipe_id=$id");
+    // Update recipe in database
+    $stmt = $con->prepare("UPDATE recipes SET recipe_name=?, recipe_image=?, instructions=?, cook_time=? WHERE recipe_id=?");
+    $stmt->bind_param("sssii", $_POST['recipe_name'], $final_path, $_POST['instructions'], $_POST['cook_time'], $id);
+    $stmt->execute();
 
+    // Delete old ingredients and add new ones
     mysqli_query($con, "DELETE FROM ingredients WHERE recipe_id=$id");   
+    
     if (!empty($_POST['ingredient_name'])) {
         foreach($_POST['ingredient_name'] as $i => $ingredient) {
             $quantity = $_POST['quantity'][$i];
-            if ($ingredient && $quantity) {
-                mysqli_query($con, "INSERT INTO ingredients (recipe_id, ingredient_name, quantity) 
-                                    VALUES ('$id', '$ingredient', '$quantity')");
+            if (!empty($ingredient) && !empty($quantity)) {
+                $ing_sql = "INSERT INTO ingredients (recipe_id, ingredient_name, quantity) VALUES ('$id', '$ingredient', '$quantity')";
+                mysqli_query($con, $ing_sql);
             }
         }
     }
-    ?>
-    <script type="text/javascript">
-        window.location = "home.php"; 
-    </script>
-    <?php
+    
+    // Redirect to home page
+    echo "<script>window.location = 'home.php';</script>";
+    exit();
 }
 ?>
+
+</body>
 </html>
