@@ -2,7 +2,57 @@
 include "connection.php";
 
 $id = $_GET["id"];
+// --- PHẦN CONTROLLER (XỬ LÝ DỮ LIỆU) ---
+// Đặt lên đầu để xử lý xong là chuyển trang luôn, không cần load lại form cũ
 
+if (isset($_POST["update"])) {
+    // 1. Lấy lại đường dẫn ảnh cũ để mặc định
+    // (Phải query lại DB để lấy ảnh cũ nếu người dùng không up ảnh mới)
+    $q_old_img = mysqli_query($con, "SELECT recipe_image FROM recipes WHERE recipe_id=$id");
+    $row_old = mysqli_fetch_array($q_old_img);
+    $final_path = $row_old['recipe_image']; 
+
+    // 2. Kiểm tra nếu có file mới được upload
+    if (isset($_FILES['recipe_image']) && $_FILES['recipe_image']['error'] == 0) {
+        $filename = time() . "_" . basename($_FILES["recipe_image"]["name"]);
+        $target_dir = "uploads/";
+        
+        if (!is_dir($target_dir)) {
+            mkdir($target_dir, 0777, true);
+        }
+        
+        $target_file = $target_dir . $filename;
+
+        if (move_uploaded_file($_FILES["recipe_image"]["tmp_name"], $target_file)) {
+            $final_path = $target_file;
+        }
+    }
+    
+    // 3. Update thông tin cơ bản
+    // Dùng Prepared Statement để tránh lỗi SQL Injection khi tên có dấu '
+    $stmt = $con->prepare("UPDATE recipes SET recipe_name=?, recipe_image=?, instructions=?, cook_time=? WHERE recipe_id=?");
+    $stmt->bind_param("sssii", $_POST['recipe_name'], $final_path, $_POST['instructions'], $_POST['cook_time'], $id);
+    $stmt->execute();
+
+    // 4. Xử lý nguyên liệu (Xóa cũ -> Thêm mới)
+    mysqli_query($con, "DELETE FROM ingredients WHERE recipe_id=$id");   
+    
+    if (!empty($_POST['ingredient_name'])) {
+        foreach($_POST['ingredient_name'] as $i => $ingredient) {
+            $quantity = $_POST['quantity'][$i];
+            if (!empty($ingredient) && !empty($quantity)) {
+                // Dùng logic insert cơ bản
+                $ingredient = mysqli_real_escape_string($con, $ingredient);
+                $quantity = mysqli_real_escape_string($con, $quantity);
+                mysqli_query($con, "INSERT INTO ingredients (recipe_id, ingredient_name, quantity) VALUES ('$id', '$ingredient', '$quantity')");
+            }
+        }
+    }
+    
+    // Redirect về home sau khi xong
+    header("Location: home.php");
+    exit();
+}
 $res = mysqli_query($con, "SELECT * FROM recipes WHERE recipe_id=$id");
 while ($row = mysqli_fetch_array($res)) {
     $recipe_name = $row["recipe_name"];
@@ -239,57 +289,5 @@ function removeIngredient(button) {
     button.parentElement.remove();
 }
 </script>
-
-<?php
-// Handle form submission
-if (isset($_POST["update"])) {
-    // Keep old image by default
-    $final_path = $recipe_image; 
-
-    // Check if new image uploaded
-    if (isset($_FILES['recipe_image']) && $_FILES['recipe_image']['error'] == 0) {
-        // Create unique filename to avoid duplicates
-        $filename = time() . "_" . basename($_FILES["recipe_image"]["name"]);
-        $target_dir = "uploads/";
-        
-        // Create uploads directory if it doesn't exist
-        if (!is_dir($target_dir)) {
-            mkdir($target_dir, 0777, true);
-        }
-        
-        $target_file = $target_dir . $filename;
-
-        // Move uploaded file
-        if (move_uploaded_file($_FILES["recipe_image"]["tmp_name"], $target_file)) {
-            $final_path = $target_file;
-        } else {
-            echo "<script>alert('Error: Cannot save image. Check uploads folder permissions!');</script>";
-        }
-    }
-    
-    // Update recipe in database
-    $stmt = $con->prepare("UPDATE recipes SET recipe_name=?, recipe_image=?, instructions=?, cook_time=? WHERE recipe_id=?");
-    $stmt->bind_param("sssii", $_POST['recipe_name'], $final_path, $_POST['instructions'], $_POST['cook_time'], $id);
-    $stmt->execute();
-
-    // Delete old ingredients and add new ones
-    mysqli_query($con, "DELETE FROM ingredients WHERE recipe_id=$id");   
-    
-    if (!empty($_POST['ingredient_name'])) {
-        foreach($_POST['ingredient_name'] as $i => $ingredient) {
-            $quantity = $_POST['quantity'][$i];
-            if (!empty($ingredient) && !empty($quantity)) {
-                $ing_sql = "INSERT INTO ingredients (recipe_id, ingredient_name, quantity) VALUES ('$id', '$ingredient', '$quantity')";
-                mysqli_query($con, $ing_sql);
-            }
-        }
-    }
-    
-    // Redirect to home page
-    echo "<script>window.location = 'home.php';</script>";
-    exit();
-}
-?>
-
 </body>
 </html>
