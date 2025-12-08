@@ -282,7 +282,7 @@ $result = mysqli_query($con, "SELECT * FROM recipes WHERE user_id = '$user_id'")
     <?php endif; ?>
 
 
-<!-- 🔍 LIVE SEARCH SCRIPT -->
+<!-- LIVE SEARCH SCRIPT -->
 <script>
 document.getElementById("searchInput").addEventListener("keyup", function() {
     let keyword = this.value.toLowerCase();
