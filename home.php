@@ -183,7 +183,6 @@ $result = mysqli_query($con, "SELECT * FROM recipes WHERE user_id = '$user_id'")
             font-size: 15px;
         }
 
-        /* BUTTONS */
         .recipe-buttons { 
             margin-top: 15px; 
         }
@@ -201,7 +200,6 @@ $result = mysqli_query($con, "SELECT * FROM recipes WHERE user_id = '$user_id'")
             background-color: #555; 
         }
 
-        /* EMPTY STATE */
         .empty-box {
             text-align: center;
             margin-top: 100px;
@@ -232,11 +230,12 @@ $result = mysqli_query($con, "SELECT * FROM recipes WHERE user_id = '$user_id'")
 <body>
 
     <div class="topbar">
-        <form action="search_results.php" method="GET" class="search-form">
-            <input type="text" name="q" placeholder="Search recipes..." class="search-input">
-            <button type="submit" style="display:none;"></button>
-        </form>
-        
+
+        <!-- NEW SEARCH BAR (NO FORM) -->
+        <div class="search-form">
+            <input type="text" id="searchInput" placeholder="Search recipes..." class="search-input">
+        </div>
+
         <div class="title">My Recipe Book</div>
 
         <div class="user-box">
@@ -252,7 +251,7 @@ $result = mysqli_query($con, "SELECT * FROM recipes WHERE user_id = '$user_id'")
 
     <?php if (mysqli_num_rows($result) > 0): ?>
 
-        <div class="recipe-grid">
+        <div class="recipe-grid" id="recipeContainer">
         <?php while ($row = mysqli_fetch_assoc($result)): 
             $img = !empty($row['recipe_image']) ? htmlspecialchars($row['recipe_image']) : 'noimage.png';
         ?>
@@ -281,6 +280,24 @@ $result = mysqli_query($con, "SELECT * FROM recipes WHERE user_id = '$user_id'")
         </div>
 
     <?php endif; ?>
+
+
+<!-- 🔍 LIVE SEARCH SCRIPT -->
+<script>
+document.getElementById("searchInput").addEventListener("keyup", function() {
+    let keyword = this.value.toLowerCase();
+    let cards = document.querySelectorAll(".recipe-card");
+
+    cards.forEach(card => {
+        let name = card.querySelector("h3").innerText.toLowerCase();
+        if (name.includes(keyword)) {
+            card.style.display = "block";
+        } else {
+            card.style.display = "none";
+        }
+    });
+});
+</script>
 
 </body>
 </html>
