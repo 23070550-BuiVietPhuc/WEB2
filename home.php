@@ -231,7 +231,7 @@ $result = mysqli_query($con, "SELECT * FROM recipes WHERE user_id = '$user_id'")
 
     <div class="topbar">
 
-        <!-- NEW SEARCH BAR (NO FORM) -->
+        <!-- NEW SEARCH BAR -->
         <div class="search-form">
             <input type="text" id="searchInput" placeholder="Search recipes..." class="search-input">
         </div>
