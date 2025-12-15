@@ -65,8 +65,10 @@ if (isset($_SESSION['username'])) {
     <form action="registration.php" method="post">
         <div><label>Username</label><input type="text" name="username" required></div>
         
-        <div><label>Password</label><input type="password" name="password" required></div>
-
+<div>
+    <label>Password</label>
+    <input type="password" name="password" required minlength="8" placeholder="Tối thiểu 8 ký tự">
+</div>
         <div>
             <label>Confirm Password</label>
             <input type="password" name="confirm_password" required>
@@ -80,4 +82,5 @@ if (isset($_SESSION['username'])) {
     </div>
 
 </body>
+
 </html>
