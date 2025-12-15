@@ -60,17 +60,22 @@ if (isset($_SESSION['username'])) {
                 <button type="submit">Login</button>
             </form>
         </div>
+<div class="box">
+    <h2>Registration Here</h2>
+    <form action="registration.php" method="post">
+        <div><label>Username</label><input type="text" name="username" required></div>
+        
+        <div><label>Password</label><input type="password" name="password" required></div>
 
-        <div class="box">
-            <h2>Registration Here</h2>
-            <form action="registration.php" method="post">
-                <div><label>Username</label><input type="text" name="username" required></div>
-                <div><label>Password</label><input type="password" name="password" required></div>
-                <div><label>Email</label><input type="email" name="email" required></div>
-                <div><label>Phone Number</label><input type="text" name="phone" required></div>
-                <button type="submit">Register</button>
-            </form>
+        <div>
+            <label>Confirm Password</label>
+            <input type="password" name="confirm_password" required>
         </div>
+        <div><label>Email</label><input type="email" name="email" required></div>
+        <div><label>Phone Number</label><input type="text" name="phone" required></div>
+        <button type="submit">Register</button>
+    </form>
+</div>
 
     </div>
 
