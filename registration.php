@@ -34,12 +34,9 @@ if ($password !== $confirm_password) {
           </script>";
     exit; // Dừng code ngay lập tức
 }
-// Kiểm tra độ dài ít nhất 8 ký tự
 if (strlen($password) < 8) {
-    echo "<script>alert('Mật khẩu quá ngắn! Phải có ít nhất 8 ký tự.'); history.back();</script>";
-    exit;
+    returnError('Mật khẩu quá ngắn (tối thiểu 8 ký tự)!');
 }
-
 // Hàm kiểm tra xem người dùng đã tồn tại chưa
 function user_exists($con, $username) {
     $stmt = $con->prepare('SELECT 1 FROM users WHERE username = ? LIMIT 1');
@@ -84,3 +81,4 @@ if ($insert->execute()) {
 $insert->close();
 
 ?>
+
