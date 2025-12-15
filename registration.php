@@ -1,92 +1,56 @@
 <?php
-// Bật báo lỗi để dễ sửa (có thể tắt khi chạy thực tế)
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
 session_start();
-include "connection.php"; // Kết nối database chung
+include "connection.php"; 
 
-// Chỉ xử lý khi có request POST đến
+// Nếu không phải POST thì đá về login
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    // Nếu người dùng cố truy cập trực tiếp link này mà không submit form
     header("Location: login.php");
     exit;
 }
 
-// 1. Lấy dữ liệu từ form
-$username = trim($_POST['username'] ?? '');
-$password = $_POST['password'] ?? '';
-$confirm_password = $_POST['confirm_password'] ?? ''; 
-$email    = trim($_POST['email'] ?? '');
-$phone    = trim($_POST['phone'] ?? '');
+$username = trim($_POST['username']);
+$password = $_POST['password'];
+$confirm  = $_POST['confirm_password'];
+$email    = trim($_POST['email']);
+$phone    = trim($_POST['phone']);
 
-// Kiểm tra dữ liệu bắt buộc
-if ($username === '' || $password === '') {
-    echo "<script>alert('Username và password bắt buộc'); history.back();</script>";
+// 1. Kiểm tra cơ bản (Rỗng, Độ dài pass, Pass khớp)
+if (empty($username) || empty($password) || empty($email)) {
+    echo "<script>alert('Vui lòng điền đủ thông tin!'); history.back();</script>";
     exit;
 }
-
-// ---------------------------------------------------------
-// [MỚI] Kiểm tra độ dài mật khẩu (Ít nhất 8 ký tự)
-// ---------------------------------------------------------
 if (strlen($password) < 8) {
-    echo "<script>
-            alert('Mật khẩu quá ngắn! Vui lòng nhập ít nhất 8 ký tự.'); 
-            history.back(); 
-          </script>";
+    echo "<script>alert('Mật khẩu phải từ 8 ký tự trở lên!'); history.back();</script>";
     exit;
 }
-// ---------------------------------------------------------
-
-// 2. Kiểm tra mật khẩu xác nhận có khớp không
-if ($password !== $confirm_password) {
-    echo "<script>
-            alert('Mật khẩu xác nhận không khớp! Vui lòng kiểm tra lại.'); 
-            history.back(); // Quay lại trang trước để không mất dữ liệu đã nhập
-          </script>";
-    exit; 
-}
-
-// Hàm kiểm tra xem người dùng đã tồn tại chưa
-function user_exists($con, $username) {
-    $stmt = $con->prepare('SELECT 1 FROM users WHERE username = ? LIMIT 1');
-    if (!$stmt) return false;
-    $stmt->bind_param('s', $username);
-    $stmt->execute();
-    $stmt->store_result();
-    $exists = $stmt->num_rows > 0;
-    $stmt->close();
-    return $exists;
-}
-
-// Kiểm tra trùng username
-if (user_exists($con, $username)) {
-    echo "<script>alert('Tên đăng nhập đã tồn tại!'); history.back();</script>";
+if ($password !== $confirm) {
+    echo "<script>alert('Mật khẩu xác nhận không khớp!'); history.back();</script>";
     exit;
 }
 
-// 3. Mã hóa mật khẩu và thêm người dùng mới vào DB
+// 2. Kiểm tra xem Username HOẶC Email đã tồn tại chưa (Gộp 2 bước làm 1)
+$check = $con->prepare("SELECT username FROM users WHERE username = ? OR email = ?");
+$check->bind_param("ss", $username, $email);
+$check->execute();
+$check->store_result();
+
+if ($check->num_rows > 0) {
+    // Nếu tìm thấy kết quả => Đã trùng Username hoặc Email
+    echo "<script>alert('Tên đăng nhập hoặc Email này đã được sử dụng!'); history.back();</script>";
+    exit;
+}
+$check->close();
+
+// 3. Nếu chưa tồn tại thì thêm mới
 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
+$stmt = $con->prepare("INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?)");
+$stmt->bind_param("ssss", $username, $hashed_password, $email, $phone);
 
-$insert = $con->prepare('INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?)');
-
-if (!$insert) {
-    echo 'Lỗi prepare: ' . $con->error;
-    exit;
-}
-
-// Gán các tham số vào câu lệnh SQL
-$insert->bind_param('ssss', $username, $hashed_password, $email, $phone);
-
-// Thực thi lệnh insert
-if ($insert->execute()) {
-    echo "<script>
-            alert('Đăng ký thành công! Vui lòng đăng nhập.');
-            window.location = 'login.php';
-          </script>";
+if ($stmt->execute()) {
+    echo "<script>alert('Đăng ký thành công!'); window.location='login.php';</script>";
 } else {
-    echo 'Lỗi thực thi: ' . $insert->error;
+    echo "<script>alert('Lỗi hệ thống, vui lòng thử lại.'); history.back();</script>";
 }
 
-$insert->close();
+$stmt->close();
 ?>
