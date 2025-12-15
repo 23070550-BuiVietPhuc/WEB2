@@ -1,87 +1,60 @@
 <?php
-// Bật báo lỗi để dễ sửa (có thể tắt khi chạy thực tế)
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
-
 session_start();
-include "connection.php"; // Kết nối database chung
+include "connection.php"; 
 
-// Chỉ xử lý khi có request POST đến
-if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    // Nếu người dùng cố truy cập trực tiếp link này mà không submit form
+// Hàm hỗ trợ trả về lỗi
+function returnError($message) {
+    $_SESSION['register_error'] = $message;
     header("Location: login.php");
     exit;
 }
 
-// 1. Lấy dữ liệu từ form
+if ($_SERVER["REQUEST_METHOD"] !== "POST") {
+    header("Location: login.php");
+    exit;
+}
+
 $username = trim($_POST['username'] ?? '');
 $password = $_POST['password'] ?? '';
-$confirm_password = $_POST['confirm_password'] ?? ''; // <--- MỚI: Lấy mật khẩu xác nhận
+$confirm_password = $_POST['confirm_password'] ?? ''; 
 $email    = trim($_POST['email'] ?? '');
 $phone    = trim($_POST['phone'] ?? '');
 
-// Kiểm tra dữ liệu bắt buộc
+// 1. Kiểm tra rỗng
 if ($username === '' || $password === '') {
-    echo "<script>alert('Username và password bắt buộc'); history.back();</script>";
-    exit;
+    returnError('Vui lòng nhập đầy đủ Username và Password!');
 }
 
-// 2. MỚI: Kiểm tra mật khẩu xác nhận có khớp không
+// 2. Kiểm tra khớp mật khẩu
 if ($password !== $confirm_password) {
-    echo "<script>
-            alert('Mật khẩu xác nhận không khớp! Vui lòng kiểm tra lại.'); 
-            history.back(); // Quay lại trang trước để không mất dữ liệu đã nhập
-          </script>";
-    exit; // Dừng code ngay lập tức
+    returnError('Mật khẩu xác nhận không khớp!');
 }
-// Kiểm tra độ dài ít nhất 8 ký tự
+
+// 3. Kiểm tra độ dài (CHỈ CẦN ĐOẠN NÀY LÀ ĐỦ)
 if (strlen($password) < 8) {
-    echo "<script>alert('Mật khẩu quá ngắn! Phải có ít nhất 8 ký tự.'); history.back();</script>";
-    exit;
-}
-// Hàm kiểm tra xem người dùng đã tồn tại chưa
-function user_exists($con, $username) {
-    $stmt = $con->prepare('SELECT 1 FROM users WHERE username = ? LIMIT 1');
-    if (!$stmt) return false;
-    $stmt->bind_param('s', $username);
-    $stmt->execute();
-    $stmt->store_result();
-    $exists = $stmt->num_rows > 0;
-    $stmt->close();
-    return $exists;
+    returnError('Mật khẩu quá ngắn (tối thiểu 8 ký tự)!');
 }
 
-// Kiểm tra trùng username
-if (user_exists($con, $username)) {
-    echo "<script>alert('Tên đăng nhập đã tồn tại!'); history.back();</script>";
-    exit;
+// 4. Kiểm tra trùng User
+$stmt = $con->prepare('SELECT 1 FROM users WHERE username = ? LIMIT 1');
+$stmt->bind_param('s', $username);
+$stmt->execute();
+if ($stmt->get_result()->num_rows > 0) {
+    returnError('Tên đăng nhập đã tồn tại!');
 }
+$stmt->close();
 
-// 3. Mã hóa mật khẩu và thêm người dùng mới vào DB
+// 5. Đăng ký
 $hashed_password = password_hash($password, PASSWORD_DEFAULT);
-
 $insert = $con->prepare('INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?)');
-
-if (!$insert) {
-    echo 'Lỗi prepare: ' . $con->error;
-    exit;
-}
-
-// Gán các tham số vào câu lệnh SQL
 $insert->bind_param('ssss', $username, $hashed_password, $email, $phone);
 
-// Thực thi lệnh insert
 if ($insert->execute()) {
-    echo "<script>
-            alert('Đăng ký thành công! Vui lòng đăng nhập.');
-            window.location = 'login.php';
-          </script>";
+    $_SESSION['register_success'] = "Đăng ký thành công! Vui lòng đăng nhập.";
+    header("Location: login.php");
 } else {
-    echo 'Lỗi thực thi: ' . $insert->error;
+    returnError('Lỗi hệ thống: ' . $insert->error);
 }
 
 $insert->close();
-
 ?>
-
-
