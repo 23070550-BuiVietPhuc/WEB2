@@ -1,6 +1,28 @@
 <?php
 session_start();
-include "templates.php"; // Gọi View Helpers
+include "user_model.php"; // CẦN THÊM file này để kiểm tra DB khi check Cookie
+include "templates.php"; 
+
+// --- BẮT ĐẦU ĐOẠN LOGIC CHECK LOGIN (Giống login.php) ---
+
+// 1. Nếu đã có Session -> Vào Home ngay
+if (isset($_SESSION['username'])) {
+    header('Location: home.php');
+    exit;
+}
+
+// 2. Tự động Login bằng Cookie (Nếu chưa có Session)
+if (isset($_COOKIE['username']) && isset($_COOKIE['token'])) {
+    $user = getUserByUsername($_COOKIE['username']);
+    // Kiểm tra token khớp với password hash
+    if ($user && $_COOKIE['token'] === $user['password']) {
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['user_id'] = $user['user_id'];
+        header('Location: home.php'); // Chuyển hướng ngay
+        exit;
+    }
+}
+// --- KẾT THÚC ĐOẠN LOGIC CHECK LOGIN ---
 ?>
 <!DOCTYPE html>
 <html lang="en">
