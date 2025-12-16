@@ -43,7 +43,7 @@ if (isset($_COOKIE['username']) && isset($_COOKIE['token'])) {
         ?>
 
         <form action="validation.php" method="post">
-            <?php editorFor("username", "User name", "text"); ?>
+            <?php editorFor("username", "Username", "text"); ?>
             <?php editorFor("password", "Password", "password"); ?>
 
             <div style="margin-bottom: 15px;">
