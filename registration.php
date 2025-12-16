@@ -1,10 +1,9 @@
 <?php
 session_start();
-include "connection.php"; 
+include "user_model.php"; 
 
-// Nếu không phải POST thì đá về login
 if ($_SERVER["REQUEST_METHOD"] !== "POST") {
-    header("Location: login.php");
+    header("Location: register.php");
     exit;
 }
 
@@ -14,43 +13,37 @@ $confirm  = $_POST['confirm_password'];
 $email    = trim($_POST['email']);
 $phone    = trim($_POST['phone']);
 
-// 1. Kiểm tra cơ bản (Rỗng, Độ dài pass, Pass khớp)
+// 1. Validation Logic
 if (empty($username) || empty($password) || empty($email)) {
-    echo "<script>alert('Vui lòng điền đủ thông tin!'); history.back();</script>";
+    $_SESSION['error'] = "Vui lòng điền đầy đủ thông tin!";
+    header("Location: register.php");
     exit;
 }
 if (strlen($password) < 8) {
-    echo "<script>alert('Mật khẩu phải từ 8 ký tự trở lên!'); history.back();</script>";
+    $_SESSION['error'] = "Mật khẩu phải từ 8 ký tự trở lên!";
+    header("Location: register.php");
     exit;
 }
 if ($password !== $confirm) {
-    echo "<script>alert('Mật khẩu xác nhận không khớp!'); history.back();</script>";
+    $_SESSION['error'] = "Mật khẩu xác nhận không khớp!";
+    header("Location: register.php");
     exit;
 }
 
-// 2. Kiểm tra xem Username HOẶC Email đã tồn tại chưa (Gộp 2 bước làm 1)
-$check = $con->prepare("SELECT username FROM users WHERE username = ? OR email = ?");
-$check->bind_param("ss", $username, $email);
-$check->execute();
-$check->store_result();
-
-if ($check->num_rows > 0) {
-    // Nếu tìm thấy kết quả => Đã trùng Username hoặc Email
-    echo "<script>alert('Tên đăng nhập hoặc Email này đã được sử dụng!'); history.back();</script>";
+// 2. Gọi Model kiểm tra & tạo user
+if (isUserExists($username, $email)) {
+    $_SESSION['error'] = "Tên đăng nhập hoặc Email đã được sử dụng!";
+    header("Location: register.php");
     exit;
 }
-$check->close();
 
-// 3. Nếu chưa tồn tại thì thêm mới
-$hashed_password = password_hash($password, PASSWORD_DEFAULT);
-$stmt = $con->prepare("INSERT INTO users (username, password, email, phone) VALUES (?, ?, ?, ?)");
-$stmt->bind_param("ssss", $username, $hashed_password, $email, $phone);
-
-if ($stmt->execute()) {
-    echo "<script>alert('Đăng ký thành công!'); window.location='login.php';</script>";
+if (createUser($username, $password, $email, $phone)) {
+    $_SESSION['success'] = "Đăng ký thành công! Vui lòng đăng nhập.";
+    header("Location: login.php");
+    exit;
 } else {
-    echo "<script>alert('Lỗi hệ thống, vui lòng thử lại.'); history.back();</script>";
+    $_SESSION['error'] = "Lỗi hệ thống, vui lòng thử lại.";
+    header("Location: register.php");
+    exit;
 }
-
-$stmt->close();
 ?>

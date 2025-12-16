@@ -2,7 +2,6 @@
 session_start();
 session_destroy();
 
-// Xóa Cookie bằng cách đặt thời gian về quá khứ
 if (isset($_COOKIE['username'])) {
     setcookie('username', '', time() - 3600, '/');
 }

@@ -1,86 +1,62 @@
 <?php
 session_start();
-// Nếu đã đăng nhập thì vào thẳng home
+include "user_model.php"; // Gọi Model
+include "templates.php";  // Gọi View Helpers
+
+// 1. Nếu đã có Session -> Vào Home
 if (isset($_SESSION['username'])) {
     header('Location: home.php');
     exit;
+}
+
+// 2. Tự động Login bằng Cookie (Nếu có)
+if (isset($_COOKIE['username']) && isset($_COOKIE['token'])) {
+    $user = getUserByUsername($_COOKIE['username']);
+    if ($user && $_COOKIE['token'] === $user['password']) {
+        $_SESSION['username'] = $user['username'];
+        $_SESSION['user_id'] = $user['user_id'];
+        header('Location: home.php');
+        exit;
+    }
 }
 ?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Login & Registration</title>
+    <title>Login</title>
     <style>
-        body { font-family: Arial, sans-serif; background-color: #fffdf5; margin: 0; padding: 0; }
-        .container { width: 80%; max-width: 900px; margin: 40px auto; display: flex; gap: 40px; justify-content: center; }
-        .box { flex: 1; background-color: #ffffff; border: 1px solid #f2e3b3; padding: 25px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.07); }
-        h2 { color: #d68b00; font-weight: 600; margin-bottom: 15px; }
-        label { display: block; margin-bottom: 6px; color: #444; font-size: 14px; }
-        input[type="text"], input[type="password"], input[type="email"] { width: 100%; padding: 10px; border: 1px solid #e0c77f; border-radius: 8px; margin-bottom: 15px; box-sizing: border-box; background-color: #fffdf7; }
-        button { background-color: #ffb100; color: white; border: none; padding: 10px 18px; border-radius: 8px; cursor: pointer; font-size: 15px; width: 100%; }
+        body { font-family: Arial, sans-serif; background-color: #fffdf5; padding: 40px; }
+        .box { width: 100%; max-width: 400px; margin: 0 auto; background: #fff; padding: 25px; border: 1px solid #f2e3b3; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.07); }
+        h2 { color: #d68b00; text-align: center; margin-bottom: 20px; }
+        button { background-color: #ffb100; color: white; border: none; padding: 10px; border-radius: 8px; cursor: pointer; width: 100%; font-size: 16px; margin-top: 10px;}
         button:hover { background-color: #e29a00; }
-        
-        /* CSS cho thông báo lỗi và checkbox */
-        .error-msg { color: red; background: #ffe6e6; padding: 10px; border-radius: 5px; margin-bottom: 15px; text-align: center; }
-        .remember-row { display: flex; align-items: center; gap: 5px; margin-bottom: 15px; }
-        .remember-row input { width: auto; margin: 0; }
-        .remember-row label { margin: 0; cursor: pointer; }
     </style>
 </head>
 <body>
-
-    <div class="container">
+    <div class="box">
+        <h2>Đăng Nhập</h2>
         
-        <div class="box">
-            <h2>Login Here</h2>
-            
-            <?php if(isset($_SESSION['error'])): ?>
-                <div class="error-msg">
-                    <?php echo $_SESSION['error']; unset($_SESSION['error']); ?>
-                </div>
-            <?php endif; ?>
+        <?php 
+            if(isset($_SESSION['error'])) { displayError($_SESSION['error']); unset($_SESSION['error']); }
+            if(isset($_SESSION['success'])) { displaySuccess($_SESSION['success']); unset($_SESSION['success']); }
+        ?>
 
-            <form action="validation.php" method="post">
-                <div>
-                    <label>Username</label>
-                    <input type="text" name="username" required>
-                </div>
+        <form action="validation.php" method="post">
+            <?php editorFor("username", "Tên đăng nhập", "text"); ?>
+            <?php editorFor("password", "Mật khẩu", "password"); ?>
 
-                <div>
-                    <label>Password</label>
-                    <input type="password" name="password" required>
-                </div>
-                
-                <div class="remember-row">
-                    <input type="checkbox" id="remember" name="remember" value="1">
-                    <label for="remember">Remember Me</label>
-                </div>
+            <div style="margin-bottom: 15px;">
+                <input type="checkbox" id="remember" name="remember" value="1">
+                <label for="remember" style="cursor: pointer;">Ghi nhớ đăng nhập</label>
+            </div>
 
-                <button type="submit">Login</button>
-            </form>
-        </div>
-<div class="box">
-    <h2>Registration Here</h2>
-    <form action="registration.php" method="post">
-        <div><label>Username</label><input type="text" name="username" required></div>
+            <button type="submit">Login</button>
+        </form>
         
-<div>
-    <label>Password</label>
-    <input type="password" name="password" required minlength="8" placeholder="Tối thiểu 8 ký tự">
-</div>
-        <div>
-            <label>Confirm Password</label>
-            <input type="password" name="confirm_password" required>
-        </div>
-        <div><label>Email</label><input type="email" name="email" required></div>
-        <div><label>Phone Number</label><input type="text" name="phone" required></div>
-        <button type="submit">Register</button>
-    </form>
-</div>
-
+        <p style="text-align: center; margin-top: 15px;">
+            Chưa có tài khoản? <a href="register.php">Đăng ký</a>
+        </p>
     </div>
-
 </body>
-
 </html>
