@@ -46,7 +46,7 @@ if (isset($_COOKIE['username']) && isset($_COOKIE['token'])) {
         ?>
 
         <form action="registration.php" method="post">
-            <?php editorFor("username", "Username", "text"); ?>
+            <?php editorFor("username", "User name", "text"); ?>
             <?php editorFor("password", "Password (at least 8 characters)", "password"); ?>
             <?php editorFor("confirm_password", "Confirm password", "password"); ?>
             <?php editorFor("email", "Email", "email"); ?>

@@ -43,8 +43,8 @@ if (isset($_COOKIE['username']) && isset($_COOKIE['token'])) {
         ?>
 
         <form action="validation.php" method="post">
-            <?php editorFor("username", "Tên đăng nhập", "text"); ?>
-            <?php editorFor("password", "Mật khẩu", "password"); ?>
+            <?php editorFor("username", "User name", "text"); ?>
+            <?php editorFor("password", "Password", "password"); ?>
 
             <div style="margin-bottom: 15px;">
                 <input type="checkbox" id="remember" name="remember" value="1">
