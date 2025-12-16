@@ -39,24 +39,24 @@ if (isset($_COOKIE['username']) && isset($_COOKIE['token'])) {
 </head>
 <body>
     <div class="box">
-        <h2>Đăng Ký</h2>
+        <h2>Register</h2>
 
         <?php 
             if(isset($_SESSION['error'])) { displayError($_SESSION['error']); unset($_SESSION['error']); }
         ?>
 
         <form action="registration.php" method="post">
-            <?php editorFor("username", "Tên đăng nhập", "text"); ?>
-            <?php editorFor("password", "Mật khẩu (Min 8 chars)", "password"); ?>
-            <?php editorFor("confirm_password", "Nhập lại mật khẩu", "password"); ?>
+            <?php editorFor("username", "Username", "text"); ?>
+            <?php editorFor("password", "Password (at least 8 characters)", "password"); ?>
+            <?php editorFor("confirm_password", "Confirm password", "password"); ?>
             <?php editorFor("email", "Email", "email"); ?>
-            <?php editorFor("phone", "Số điện thoại", "text"); ?>
+            <?php editorFor("phone", "Phone number", "text"); ?>
 
-            <button type="submit">Đăng ký</button>
+            <button type="submit">Register</button>
         </form>
         
         <p style="text-align: center; margin-top: 15px;">
-            Đã có tài khoản? <a href="login.php">Đăng nhập</a>
+            Have an account yet ? <a href="login.php">Login</a>
         </p>
     </div>
 </body>

@@ -35,7 +35,7 @@ if (isset($_COOKIE['username']) && isset($_COOKIE['token'])) {
 </head>
 <body>
     <div class="box">
-        <h2>Đăng Nhập</h2>
+        <h2>Login</h2>
         
         <?php 
             if(isset($_SESSION['error'])) { displayError($_SESSION['error']); unset($_SESSION['error']); }
@@ -48,14 +48,14 @@ if (isset($_COOKIE['username']) && isset($_COOKIE['token'])) {
 
             <div style="margin-bottom: 15px;">
                 <input type="checkbox" id="remember" name="remember" value="1">
-                <label for="remember" style="cursor: pointer;">Ghi nhớ đăng nhập</label>
+                <label for="remember" style="cursor: pointer;">Remember me</label>
             </div>
 
             <button type="submit">Login</button>
         </form>
         
         <p style="text-align: center; margin-top: 15px;">
-            Chưa có tài khoản? <a href="register.php">Đăng ký</a>
+            Have an account yet? <a href="register.php">Register</a>
         </p>
     </div>
 </body>
